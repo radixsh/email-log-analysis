@@ -2,7 +2,7 @@
 These are some scripts I wrote at work for gleaning phishing campaign data from
 Outlook Threat Explorer and Gmail Log Search data.
 
-Each script is in this format:
+Each script can be run like this:
 ```./script.py data.csv domains.txt```
 
 The first argument, `data.csv`, is data downloaded via the GUIs of Microsoft
@@ -36,4 +36,5 @@ data, and call it `gmail_outgoing.csv`.
 	accounts are managed by Google
 
 ## Running the scripts
-`{gmail,outlook}_{incoming,outgoing} data.csv domains.txt`
+```sh
+$ ./{gmail,outlook}_{incoming,outgoing}.py data.csv domains.txt```
