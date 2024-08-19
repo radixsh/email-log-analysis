@@ -37,4 +37,5 @@ data, and call it `gmail_outgoing.csv`.
 
 ## Running the scripts
 ```sh
-$ ./{gmail,outlook}_{incoming,outgoing}.py data.csv domains.txt```
+$ ./{gmail,outlook}_{incoming,outgoing}.py data.csv domains.txt
+```
