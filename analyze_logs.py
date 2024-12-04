@@ -2,11 +2,6 @@ import csv
 import sys
 import os
 
-# def new_recipient_gmail(row, domains, recipients):
-#     return row['Recipient address'] not in recipients \
-#             and any(d in row['Recipient address'] for d in domains) \
-#             and "journal" not in row['Recipient address']
-
 def new_recipient_outlook(row, domains, recipients):
     return row['Recipients'] not in recipients \
             and any(d in row['Recipients'] for d in domains) \
@@ -31,7 +26,7 @@ def outlook_incoming(filename, domains):
 
     csv_file.close()
 
-def new_outlook_target(row, domains, responders):
+def new_responder_outlook(row, domains, responders):
     to_ignore = ["automatic reply", "away", "out of office"]
     return row['Sender address'] not in responders \
             and any(d in row['Sender address'] for d in domains) \
@@ -44,7 +39,7 @@ def outlook_outgoing(filename, domains):
     responders = []
     for row in reader:
         # Count unique responders
-        if new_outlook_target(row, domains, responders):
+        if new_responder_outlook(row, domains, responders):
             responders.append(row['Sender address'])
 
             # Print details so we can notify each victim
@@ -52,6 +47,33 @@ def outlook_outgoing(filename, domains):
                   f"{row['Recipients']}\t\t{row['Subject']}")
 
     print(f'Total: {len(responders)}')
+    csv_file.close()
+
+def new_recipient_gmail(row, domains, recipients):
+    return row['Recipient address'] not in recipients \
+            and any(d in row['Recipient address'] for d in domains) \
+            and "journal" not in row['Recipient address']
+
+def gmail_incoming(filename, domains):
+    csv_file = open(filename, 'r')
+    reader = csv.DictReader(csv_file)
+
+    recipients = []
+    inbox_count = 0
+    for row in reader:
+        # Lots of duplicate logs
+        if "SMTP_" in row['Event target']:
+            continue
+
+        # Count unique recipients
+        if new_recipient_gmail(row, domains, recipients):
+            recipients.append(row['Recipient address'])
+
+            if "GMAIL_INBOX" in row['Event target']:
+                inbox_count += 1
+
+    print(f"Unique recipients:\t{len(recipients)}")
+    print(f"Sent to Gmail inbox:\t{inbox_count}")
 
     csv_file.close()
 
@@ -67,13 +89,13 @@ def main():
         full_path = os.path.join(path, name)
         if not os.path.isfile(full_path) and full_path[-4:] == ".csv":
             continue
-        if "outlook" in full_path and "in" in full_path:
+        if "outlook" in full_path and "incoming" in full_path:
             fps['outlook_infile'] = full_path
-        elif "outlook" in full_path and "out" in full_path:
+        elif "outlook" in full_path and "outgoing" in full_path:
             fps['outlook_outfile'] = full_path
-        elif "gmail" in full_path and "in" in full_path:
+        elif "gmail" in full_path and "incoming" in full_path:
             fps['gmail_infile'] = full_path
-        elif "gmail" in full_path and "out" in full_path:
+        elif "gmail" in full_path and "outgoing" in full_path:
             fps['gmail_outfile'] = full_path
 
     domains_file = open(sys.argv[2], 'r')
@@ -89,7 +111,8 @@ def main():
 
     # Gmail incoming: recipients, received to inbox
     print(f"========= GMAIL INCOMING ({fps['gmail_infile']})")
-    
+    gmail_incoming(fps["gmail_infile"], domains)
+
     # Gmail outgoing: number of replies
     print(f"========= GMAIL OUTGOING ({fps['gmail_outfile']})")
     
