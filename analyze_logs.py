@@ -77,6 +77,29 @@ def gmail_incoming(filename, domains):
 
     csv_file.close()
 
+def new_responder_gmail(row, domains, responders):
+    to_ignore = ["automatic reply", "away", "out of office"]
+    return row['Sender'] not in responders \
+            and any(d in row['Sender'] for d in domains) \
+            and not any(s in row['Subject'].lower() for s in to_ignore)
+
+def gmail_outgoing(filename, domains):
+    csv_file = open(filename, 'r')
+    reader = csv.DictReader(csv_file)
+
+    responders = []
+    for row in reader:
+        # Count unique responders
+        if new_responder_gmail(row, domains, responders):
+            responders.append(row['Sender'])
+
+            # Print details so we can notify each victim
+            print(f"{row['Sender']}\t\t"
+                  f"{row['Recipient address']}\t\t{row['Subject']}")
+
+    print(f"Total: {len(responders)}")
+    csv_file.close()
+
 def main():
     if len(sys.argv) != 3:
         print("Usage: ./analyze_logs.py logs_dir domains.txt")
