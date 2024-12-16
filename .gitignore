@@ -1,4 +1,8 @@
-domains.txt
+# General
 .DS_Store
-venv/
+.venv/
+
+# Project-specific
+domains.txt
 logs/
+archive/
